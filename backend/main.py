@@ -1,18 +1,31 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
-from k8s_client import K8sClient
-import subprocess
-import tempfile
-import yaml
 import os
 
-app = FastAPI(title="Vibranium API")
-k8s = K8sClient()
+from k8s_client import (
+    get_k8s_clients,
+    create_namespace,
+    create_service,
+    create_deployment,
+    create_rollout,
+    get_rollout_status,
+    list_all_rollouts,
+    rollback_rollout,
+)
 
-HELM_CHART_PATH = os.environ.get("HELM_CHART_PATH", "/app/helm/vibranium-chart")
+app = FastAPI(title="Vibranium API", version="0.4.0")
 
-# ── models ────────────────────────────────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ---------- Models ----------
 
 class ServiceCreateRequest(BaseModel):
     name: str
@@ -21,102 +34,154 @@ class ServiceCreateRequest(BaseModel):
     port: int = 8000
     replicas: int = 2
 
-class NamespaceCreateRequest(BaseModel):
-    name: str
 
-# ── helpers ───────────────────────────────────────────────────────────────────
+class DeployRequest(BaseModel):
+    image: str
 
-def render_helm_templates(req: ServiceCreateRequest) -> list[dict]:
-    """Run helm template and return list of parsed manifest dicts."""
-    cmd = [
-        "helm", "template", req.name, HELM_CHART_PATH,
-        "--set", f"name={req.name}",
-        "--set", f"team={req.team}",
-        "--set", f"image={req.image}",
-        "--set", f"port={req.port}",
-        "--set", f"replicas={req.replicas}",
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise HTTPException(status_code=500, detail=f"Helm render failed: {result.stderr}")
 
-    manifests = []
-    for doc in yaml.safe_load_all(result.stdout):
-        if doc is not None:
-            manifests.append(doc)
-    return manifests
-
-def apply_manifest(manifest: dict):
-    """Apply a single manifest dict to EKS via dynamic client."""
-    api_version = manifest.get("apiVersion", "")
-    kind = manifest.get("kind", "")
-    name = manifest["metadata"]["name"]
-    namespace = manifest["metadata"].get("namespace")
-
-    try:
-        if kind == "Namespace":
-            k8s.create_namespace(name)
-
-        elif kind == "Deployment":
-            k8s.apply_deployment(manifest)
-
-        elif kind == "Service":
-            k8s.apply_service(manifest)
-
-        elif kind == "Rollout" or (api_version.startswith("argoproj.io") and kind == "Rollout"):
-            k8s.apply_rollout(manifest)
-
-        elif kind == "ConfigMap":
-            k8s.apply_configmap(manifest)
-
-    except Exception as e:
-        # namespace already exists = fine, everything else raise
-        if "already exists" in str(e):
-            pass
-        else:
-            raise HTTPException(status_code=500, detail=f"Failed to apply {kind}/{name}: {str(e)}")
-
-# ── endpoints ─────────────────────────────────────────────────────────────────
+# ---------- Health ----------
 
 @app.get("/")
 def root():
     return {"message": "Welcome to Vibranium"}
 
+
 @app.get("/health")
 def health():
-    return {"status": "vibranium is live"}
+    return {"status": "vibranium is live", "version": "0.4.0"}
+
+
+# ---------- Teams ----------
+
+TEAMS = [
+    {"name": "team-payments", "display": "Payments"},
+    {"name": "team-auth",     "display": "Auth"},
+    {"name": "team-gateway",  "display": "Gateway"},
+    {"name": "team-infra",    "display": "Infra"},
+]
 
 @app.get("/teams")
-def get_teams():
-    return {
-        "teams": [
-            {"name": "payments", "namespace": "team-payments"},
-            {"name": "auth",     "namespace": "team-auth"},
-            {"name": "gateway",  "namespace": "team-gateway"},
-            {"name": "infra",    "namespace": "team-infra"},
-        ]
-    }
+def list_teams():
+    return {"teams": TEAMS}
+
+
+# ---------- Namespaces ----------
 
 @app.post("/namespaces")
-def create_namespace(req: NamespaceCreateRequest):
-    result = k8s.create_namespace(req.name)
-    return {"status": "created", "namespace": req.name}
+def create_ns(body: dict):
+    name = body.get("name")
+    if not name:
+        raise HTTPException(status_code=400, detail="name is required")
+    result = create_namespace(name)
+    return {"status": "created", "namespace": name, "detail": result}
+
+
+# ---------- Service catalog ----------
 
 @app.get("/services")
 def list_services():
-    rollouts = k8s.list_rollouts()
-    return {"services": rollouts}
+    """List all Argo Rollouts across every namespace."""
+    return {"services": list_all_rollouts()}
+
+
+@app.get("/services/{name}")
+def get_service(name: str, namespace: str = "default"):
+    status = get_rollout_status(name, namespace)
+    if not status:
+        raise HTTPException(status_code=404, detail=f"Rollout '{name}' not found in namespace '{namespace}'")
+    return status
+
+
+# ---------- Create + deploy ----------
 
 @app.post("/services")
-def create_service(req: ServiceCreateRequest):
-    manifests = render_helm_templates(req)
-    applied = []
-    for manifest in manifests:
-        apply_manifest(manifest)
-        applied.append(f"{manifest['kind']}/{manifest['metadata']['name']}")
+def create_service_endpoint(req: ServiceCreateRequest):
+    """
+    Option B+: build every K8s resource directly via the Python SDK.
+    No Helm binary. No subprocess. No YAML files on disk.
+    """
+    namespace = req.team if req.team.startswith("team-") else f"team-{req.team}"
+
+    # 1. Namespace
+    create_namespace(namespace)
+
+    # 2. ClusterIP Service
+    create_service(name=req.name, namespace=namespace, port=req.port)
+
+    # 3. Deployment (stable baseline — Argo Rollout manages replicas)
+    create_deployment(
+        name=req.name,
+        namespace=namespace,
+        image=req.image,
+        port=req.port,
+        replicas=req.replicas,
+    )
+
+    # 4. Argo Rollout (canary strategy, shadows the Deployment)
+    create_rollout(
+        name=req.name,
+        namespace=namespace,
+        image=req.image,
+        port=req.port,
+        replicas=req.replicas,
+    )
+
     return {
         "status": "deployed",
         "service": req.name,
-        "team": req.team,
-        "applied": applied
+        "team": namespace,
+        "resources": ["Namespace", "Service", "Deployment", "Rollout"],
     }
+
+
+# ---------- Trigger new deploy (image update) ----------
+
+@app.post("/services/{name}/deploy")
+def deploy_new_image(name: str, req: DeployRequest, namespace: str = "default"):
+    """Update the Rollout image to trigger a new canary rollout."""
+    from kubernetes import client as k8s_client, config as k8s_config
+    try:
+        try:
+            k8s_config.load_incluster_config()
+        except Exception:
+            k8s_config.load_kube_config()
+
+        custom = k8s_client.CustomObjectsApi()
+        patch = {
+            "spec": {
+                "template": {
+                    "spec": {
+                        "containers": [{"name": name, "image": req.image}]
+                    }
+                }
+            }
+        }
+        custom.patch_namespaced_custom_object(
+            group="argoproj.io",
+            version="v1alpha1",
+            namespace=namespace,
+            plural="rollouts",
+            name=name,
+            body=patch,
+        )
+        return {"status": "rollout triggered", "service": name, "image": req.image}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------- Rollout status (polling endpoint) ----------
+
+@app.get("/services/{name}/rollout")
+def rollout_status(name: str, namespace: str = "default"):
+    status = get_rollout_status(name, namespace)
+    if not status:
+        raise HTTPException(status_code=404, detail=f"Rollout '{name}' not found")
+    return status
+
+
+# ---------- Rollback ----------
+
+@app.post("/services/{name}/rollback")
+def rollback(name: str, namespace: str = "default"):
+    result = rollback_rollout(name, namespace)
+    return {"status": "rollback initiated", "service": name, "detail": result}
