@@ -287,3 +287,74 @@ def rollback_rollout(name: str, namespace: str) -> str:
         return f"rollout/{name} aborted — stable version restored"
     except ApiException as e:
         raise Exception(f"Rollback failed: {e.reason}")
+    
+
+    # ---------- Harvey Integration (link generation) ----------
+
+HARVEY_URLS = {
+    "grafana": "http://grafana.harvey.svc.cluster.local:3000",
+    "prometheus": "http://prometheus.harvey.svc.cluster.local:9090",
+    "kiali": "http://kiali.harvey.svc.cluster.local:20001",
+}
+
+def get_harvey_links(name: str, namespace: str) -> dict:
+    """
+    Generate pre-filtered Harvey monitoring links for a service.
+    Links are constructed with the service name baked in — no live query needed.
+    """
+    grafana_url = (
+        f"{HARVEY_URLS['grafana']}/d/vibranium-service"
+        f"?var-service={name}&var-namespace={namespace}"
+    )
+    prometheus_url = (
+        f"{HARVEY_URLS['prometheus']}/graph"
+        f"?g0.expr=rate(http_requests_total{{service%3D%22{name}%22}}[5m])"
+        f"&g0.tab=0"
+    )
+    kiali_url = (
+        f"{HARVEY_URLS['kiali']}/kiali/console/namespaces/{namespace}/services/{name}"
+    )
+
+    return {
+        "grafana": grafana_url,
+        "prometheus": prometheus_url,
+        "kiali": kiali_url,
+    }
+
+
+def get_service_metrics(name: str, namespace: str) -> dict:
+    """
+    Returns metrics for a service.
+    When Prometheus is reachable, query live.
+    When not (dev cluster, no Harvey), return structured placeholder.
+    """
+    # Attempt live Prometheus query
+    import httpx
+    prom_base = HARVEY_URLS["prometheus"]
+    metrics = {}
+
+    queries = {
+        "request_rate": f'rate(http_requests_total{{service="{name}"}}[5m])',
+        "error_rate": f'rate(http_requests_total{{service="{name}",status=~"5.."}}[5m])',
+        "p99_latency": f'histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{{service="{name}"}}[5m]))',
+    }
+
+    for metric_name, query in queries.items():
+        try:
+            resp = httpx.get(
+                f"{prom_base}/api/v1/query",
+                params={"query": query},
+                timeout=2.0,
+            )
+            result = resp.json().get("data", {}).get("result", [])
+            metrics[metric_name] = float(result[0]["value"][1]) if result else None
+        except Exception:
+            metrics[metric_name] = None  # Prometheus not reachable — expected in dev
+
+    return {
+        "service": name,
+        "namespace": namespace,
+        "metrics": metrics,
+        "note": "null values indicate Prometheus not reachable in this environment — links are live",
+        "links": get_harvey_links(name, namespace),
+    }

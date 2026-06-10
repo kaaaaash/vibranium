@@ -185,3 +185,21 @@ def rollout_status(name: str, namespace: str = "default"):
 def rollback(name: str, namespace: str = "default"):
     result = rollback_rollout(name, namespace)
     return {"status": "rollback initiated", "service": name, "detail": result}
+
+
+@app.get("/services/{name}/metrics")
+def service_metrics(name: str, namespace: str = "team-payments"):
+    from k8s_client import get_service_metrics
+    return get_service_metrics(name, namespace)
+
+@app.get("/services/{name}/monitor")
+def service_monitor(name: str, namespace: str = "team-payments"):
+    from k8s_client import get_harvey_links, get_rollout_status
+    links = get_harvey_links(name, namespace)
+    status = get_rollout_status(name, namespace)
+    return {
+        "service": name,
+        "namespace": namespace,
+        "rollout_phase": status["phase"] if status else "Unknown",
+        "monitoring": links,
+    }
