@@ -1,0 +1,84 @@
+.dc-stack {
+  position: relative;
+  width: 300px;
+  height: 200px;
+  margin: 56px auto 0;   /* center horizontally so the fan stops clipping */
+}
+
+.dc-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 280px;
+  height: 180px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: linear-gradient(160deg, #6b0000 0%, #4f0000 100%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transform-origin: bottom center;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.dc-card:nth-child(1) { transform: rotate(-3deg); z-index: 1; }
+.dc-card:nth-child(2) { transform: rotate(-1deg); z-index: 2; }
+.dc-card:nth-child(3) { transform: rotate(1deg); z-index: 3; }
+.dc-card:nth-child(4) { transform: rotate(3deg); z-index: 4; }
+
+.dc-stack:hover .dc-card:nth-child(1) { transform: translateX(-150px) rotate(-16deg); }
+.dc-stack:hover .dc-card:nth-child(2) { transform: translateX(-50px) rotate(-6deg); }
+.dc-stack:hover .dc-card:nth-child(3) { transform: translateX(50px) rotate(6deg); }
+.dc-stack:hover .dc-card:nth-child(4) { transform: translateX(150px) rotate(16deg); }
+
+.dc-card:hover {
+  transform: translateY(-24px) rotate(0deg) scale(1.05) !important;
+  z-index: 50;
+  border-color: var(--accent);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(230, 210, 162, 0.35);
+}
+
+.dc-icon {
+  font-size: 26px;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.dc-label {
+  font-family: var(--font-hero);
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+}
+
+.dc-desc {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+.dc-go {
+  font-family: var(--font-nav);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  margin-top: auto;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.dc-card:hover .dc-go {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dc-card { transition: none; }
+}

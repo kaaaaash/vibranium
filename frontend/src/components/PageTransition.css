@@ -1,0 +1,14 @@
+@keyframes vibPageIn {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.vib-page {
+	animation: vibPageIn 0.32s ease both;
+}

@@ -1,0 +1,28 @@
+@keyframes ss-ring  { 0% { transform: scale(0); opacity: 0; } 60% { opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes ss-check { to { stroke-dashoffset: 0; } }
+@keyframes ss-up    { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ss-glow  { 0%, 100% { box-shadow: 0 0 0 0 rgba(230,210,162,0.0); } 50% { box-shadow: 0 0 48px 10px rgba(230,210,162,0.22); } }
+@keyframes ss-fly   { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-130px) scale(0.4); } }
+
+.ss-ring {
+  width: 120px; height: 120px; border-radius: 50%;
+  border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  animation: ss-ring 0.6s cubic-bezier(0.2,0.8,0.2,1) both, ss-glow 2.6s ease-in-out 0.7s infinite;
+}
+.ss-check {
+  stroke: var(--accent); stroke-width: 3; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 60; stroke-dashoffset: 60;
+  animation: ss-check 0.5s ease-out 0.55s forwards;
+}
+.ss-particle {
+  position: absolute; width: 7px; height: 7px; border-radius: 2px;
+  background: var(--accent); opacity: 0;
+  animation: ss-fly 0.9s ease-out 0.4s forwards;
+}
+.ss-up { opacity: 0; animation: ss-up 0.6s ease-out forwards; }
+
+.ss-btn { transition: all 0.2s ease; cursor: pointer; }
+.ss-primary:hover { background: var(--accent-hover) !important; }
+.ss-ghost:hover { border-color: var(--accent) !important; color: var(--accent) !important; }

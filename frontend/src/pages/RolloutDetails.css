@@ -1,0 +1,21 @@
+@keyframes rd-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.rd-pulse { animation: rd-pulse 1.6s ease-in-out infinite; }
+
+.rd-btn { transition: all 0.2s ease; cursor: pointer; }
+.rd-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.rd-primary:hover:not(:disabled) { background: var(--accent-hover) !important; }
+.rd-danger:hover:not(:disabled)  { background: var(--danger) !important; color: #fff !important; border-color: var(--danger) !important; }
+.rd-ghost:hover:not(:disabled)   { border-color: var(--accent) !important; color: var(--accent) !important; }
+
+.rd-back { transition: color 0.2s ease, transform 0.2s ease; cursor: pointer; }
+.rd-back:hover { color: var(--accent) !important; transform: translateX(-3px); }
+
+.rd-bar-fill { transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+.rd-step { transition: all 0.4s ease; }
+
+.rd-field { color: #FBF9F6; }
+.rd-field::placeholder { color: var(--text-muted); opacity: 0.5; }
+.rd-field:focus { border-color: var(--accent); }
+
+.rd-raw summary { cursor: pointer; list-style: none; }
+.rd-raw summary::-webkit-details-marker { display: none; }

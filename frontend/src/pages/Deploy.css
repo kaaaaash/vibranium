@@ -1,0 +1,44 @@
+.vib-field {
+  color: #FBF9F6;
+}
+.vib-field::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.vib-field:focus {
+  border-color: var(--accent);
+}
+
+.vib-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+.vib-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 4px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 14px rgba(230, 210, 162, 0.55);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.vib-range::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+.vib-range::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 4px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 14px rgba(230, 210, 162, 0.55);
+  cursor: pointer;
+}

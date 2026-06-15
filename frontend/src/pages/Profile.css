@@ -1,0 +1,144 @@
+.pf-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+  font-family: var(--font-body, sans-serif);
+  color: var(--text-primary, #f8f4f0);
+}
+
+.pf-head { margin-bottom: 28px; }
+.pf-eyebrow {
+  font-family: var(--font-nav, sans-serif);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent, #e6d2a2);
+  margin-bottom: 8px;
+}
+.pf-h1 {
+  font-family: var(--font-hero, serif);
+  font-size: 34px;
+  margin: 0;
+}
+
+.pf-card {
+  background: var(--bg-card, #6b0000);
+  border: 1px solid var(--border, #9b3a3a);
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+
+.pf-identity { display: flex; align-items: center; gap: 18px; }
+.pf-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent, #e6d2a2);
+}
+.pf-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated, #4f0000);
+  font-family: var(--font-hero, serif);
+  font-size: 26px;
+  color: var(--accent, #e6d2a2);
+}
+.pf-id-text { flex: 1; min-width: 0; }
+.pf-name { font-size: 20px; font-weight: 600; }
+.pf-role-line { font-size: 13px; color: var(--accent, #e6d2a2); margin-top: 2px; }
+.pf-email { font-size: 13px; color: var(--text-muted, #a98f8f); margin-top: 4px; }
+
+.pf-signout {
+  background: var(--danger, #e85050);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-family: var(--font-nav, sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease;
+  white-space: nowrap;
+}
+.pf-signout:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+.pf-badge-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.pf-badge { margin-bottom: 0; text-align: center; }
+.pf-badge-label {
+  font-family: var(--font-nav, sans-serif);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-muted, #a98f8f);
+  margin-bottom: 8px;
+}
+.pf-badge-value { font-size: 15px; font-weight: 600; text-transform: capitalize; }
+.pf-role-platform-admin { color: var(--accent, #e6d2a2); }
+.pf-role-sre { color: var(--info, #6fa8dc); }
+.pf-role-developer { color: var(--success, #4caf82); }
+
+.pf-section-title {
+  font-family: var(--font-nav, sans-serif);
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--text-secondary, #d7c6c6);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.pf-caps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pf-cap { display: flex; align-items: center; gap: 10px; font-size: 14.5px; }
+.pf-cap-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.pf-cap-on { color: var(--text-primary, #f8f4f0); }
+.pf-cap-on .pf-cap-mark { background: rgba(76, 175, 130, 0.18); color: var(--success, #4caf82); }
+.pf-cap-off { color: var(--text-muted, #a98f8f); }
+.pf-cap-off .pf-cap-mark { background: rgba(255, 255, 255, 0.05); color: var(--text-muted, #a98f8f); }
+
+.pf-envs { display: flex; gap: 12px; flex-wrap: wrap; }
+.pf-env {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  border: 1px solid var(--divider, #7a1d1d);
+}
+.pf-env-on { color: var(--text-primary, #f8f4f0); }
+.pf-env-on .pf-cap-mark { background: rgba(76, 175, 130, 0.18); color: var(--success, #4caf82); }
+.pf-env-off { color: var(--text-muted, #a98f8f); opacity: 0.7; }
+.pf-env-off .pf-cap-mark { background: rgba(232, 80, 80, 0.15); color: var(--danger, #e85050); }
+
+.pf-kv {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--divider, #7a1d1d);
+  font-size: 14px;
+}
+.pf-kv:last-child { border-bottom: none; }
+.pf-kv span { color: var(--text-muted, #a98f8f); }
+
+.pf-footnote {
+  margin-top: 20px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-muted, #a98f8f);
+}

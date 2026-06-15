@@ -4,3 +4,6 @@ kubernetes
 pydantic
 httpx
 pyyaml
+google-auth
+requests
+PyJWT

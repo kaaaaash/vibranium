@@ -1,21 +1,29 @@
-from fastapi import FastAPI, HTTPException
+from typing import Optional
+
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
-import os
+
+from auth import (
+    get_current_user,
+    require_permission,
+    router as auth_router,
+)
 
 from k8s_client import (
-    get_k8s_clients,
-    create_namespace,
-    create_service,
     create_deployment,
+    create_namespace,
     create_rollout,
+    create_service,
     get_rollout_status,
     list_all_rollouts,
     rollback_rollout,
 )
 
-app = FastAPI(title="Vibranium API", version="0.4.0")
+app = FastAPI(
+    title="Vibranium API",
+    version="0.5.0",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,8 +32,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 
-# ---------- Models ----------
+
+# ============================================================
+# RBAC HELPERS
+# ============================================================
+
+def resolve_namespace(
+    user: dict,
+    namespace: Optional[str] = None,
+) -> str:
+    """
+    Admins can inspect any namespace.
+    Everyone else is restricted to their own namespace.
+    """
+
+    if user.get("is_admin"):
+        return namespace or user["namespace"]
+
+    user_namespace = user["namespace"]
+
+    if namespace and namespace != user_namespace:
+        raise HTTPException(
+            status_code=403,
+            detail="Cross-team access denied",
+        )
+
+    return user_namespace
+
+
+# ============================================================
+# MODELS
+# ============================================================
 
 class ServiceCreateRequest(BaseModel):
     name: str
@@ -39,76 +78,166 @@ class DeployRequest(BaseModel):
     image: str
 
 
-# ---------- Health ----------
+# ============================================================
+# HEALTH
+# ============================================================
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to Vibranium"}
+    return {
+        "message": "Welcome to Vibranium"
+    }
 
 
 @app.get("/health")
 def health():
-    return {"status": "vibranium is live", "version": "0.4.0"}
+    return {
+        "status": "vibranium is live",
+        "version": "0.5.0",
+    }
 
 
-# ---------- Teams ----------
+# ============================================================
+# TEAMS
+# ============================================================
 
 TEAMS = [
-    {"name": "team-payments", "display": "Payments"},
-    {"name": "team-auth",     "display": "Auth"},
-    {"name": "team-gateway",  "display": "Gateway"},
-    {"name": "team-infra",    "display": "Infra"},
+    {
+        "name": "team-payments",
+        "display": "Payments",
+    },
+    {
+        "name": "team-auth",
+        "display": "Auth",
+    },
+    {
+        "name": "team-gateway",
+        "display": "Gateway",
+    },
+    {
+        "name": "team-infra",
+        "display": "Infra",
+    },
 ]
 
+
 @app.get("/teams")
-def list_teams():
-    return {"teams": TEAMS}
+def list_teams(
+    user=Depends(get_current_user),
+):
+    return {
+        "teams": TEAMS
+    }
 
 
-# ---------- Namespaces ----------
+# ============================================================
+# NAMESPACES
+# ============================================================
 
 @app.post("/namespaces")
-def create_ns(body: dict):
+def create_ns(
+    body: dict,
+    user=Depends(require_permission("deploy")),
+):
     name = body.get("name")
+
     if not name:
-        raise HTTPException(status_code=400, detail="name is required")
-    result = create_namespace(name)
-    return {"status": "created", "namespace": name, "detail": result}
+        raise HTTPException(
+            status_code=400,
+            detail="name is required",
+        )
+
+    namespace = resolve_namespace(user, name)
+
+    result = create_namespace(namespace)
+
+    return {
+        "status": "created",
+        "namespace": namespace,
+        "detail": result,
+    }
 
 
-# ---------- Service catalog ----------
+# ============================================================
+# SERVICES
+# ============================================================
 
 @app.get("/services")
-def list_services():
-    """List all Argo Rollouts across every namespace."""
-    return {"services": list_all_rollouts()}
+def list_services(
+    user=Depends(require_permission("view")),
+):
+    services = list_all_rollouts()
+
+    if not user.get("is_admin"):
+        namespace = user.get("namespace")
+
+        services = [
+            svc
+            for svc in services
+            if svc.get("namespace") == namespace
+        ]
+
+    return {
+        "services": services
+    }
 
 
 @app.get("/services/{name}")
-def get_service(name: str, namespace: str = "default"):
-    status = get_rollout_status(name, namespace)
+def get_service(
+    name: str,
+    namespace: Optional[str] = None,
+    user=Depends(require_permission("view")),
+):
+    namespace = resolve_namespace(
+        user,
+        namespace,
+    )
+
+    status = get_rollout_status(
+        name,
+        namespace,
+    )
+
     if not status:
-        raise HTTPException(status_code=404, detail=f"Rollout '{name}' not found in namespace '{namespace}'")
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Rollout '{name}' "
+                f"not found in namespace '{namespace}'"
+            ),
+        )
+
     return status
 
 
-# ---------- Create + deploy ----------
+# ============================================================
+# CREATE SERVICE
+# ============================================================
 
 @app.post("/services")
-def create_service_endpoint(req: ServiceCreateRequest):
-    """
-    Option B+: build every K8s resource directly via the Python SDK.
-    No Helm binary. No subprocess. No YAML files on disk.
-    """
-    namespace = req.team if req.team.startswith("team-") else f"team-{req.team}"
+def create_service_endpoint(
+    req: ServiceCreateRequest,
+    user=Depends(require_permission("deploy")),
+):
+    requested_namespace = (
+        req.team
+        if req.team.startswith("team-")
+        else f"team-{req.team}"
+    )
 
-    # 1. Namespace
+    namespace = resolve_namespace(
+        user,
+        requested_namespace,
+    )
+
     create_namespace(namespace)
 
-    # 2. ClusterIP Service
-    create_service(name=req.name, namespace=namespace, port=req.port)
+    create_service(
+        name=req.name,
+        namespace=namespace,
+        port=req.port,
+    )
 
-    # 3. Deployment (stable baseline — Argo Rollout manages replicas)
     create_deployment(
         name=req.name,
         namespace=namespace,
@@ -117,7 +246,6 @@ def create_service_endpoint(req: ServiceCreateRequest):
         replicas=req.replicas,
     )
 
-    # 4. Argo Rollout (canary strategy, shadows the Deployment)
     create_rollout(
         name=req.name,
         namespace=namespace,
@@ -130,16 +258,34 @@ def create_service_endpoint(req: ServiceCreateRequest):
         "status": "deployed",
         "service": req.name,
         "team": namespace,
-        "resources": ["Namespace", "Service", "Deployment", "Rollout"],
+        "resources": [
+            "Namespace",
+            "Service",
+            "Deployment",
+            "Rollout",
+        ],
     }
 
 
-# ---------- Trigger new deploy (image update) ----------
+# ============================================================
+# DEPLOY NEW IMAGE
+# ============================================================
 
 @app.post("/services/{name}/deploy")
-def deploy_new_image(name: str, req: DeployRequest, namespace: str = "default"):
-    """Update the Rollout image to trigger a new canary rollout."""
-    from kubernetes import client as k8s_client, config as k8s_config
+def deploy_new_image(
+    name: str,
+    req: DeployRequest,
+    namespace: Optional[str] = None,
+    user=Depends(require_permission("deploy")),
+):
+    namespace = resolve_namespace(
+        user,
+        namespace,
+    )
+
+    from kubernetes import client as k8s_client
+    from kubernetes import config as k8s_config
+
     try:
         try:
             k8s_config.load_incluster_config()
@@ -147,15 +293,22 @@ def deploy_new_image(name: str, req: DeployRequest, namespace: str = "default"):
             k8s_config.load_kube_config()
 
         custom = k8s_client.CustomObjectsApi()
+
         patch = {
             "spec": {
                 "template": {
                     "spec": {
-                        "containers": [{"name": name, "image": req.image}]
+                        "containers": [
+                            {
+                                "name": name,
+                                "image": req.image,
+                            }
+                        ]
                     }
                 }
             }
         }
+
         custom.patch_namespaced_custom_object(
             group="argoproj.io",
             version="v1alpha1",
@@ -164,42 +317,136 @@ def deploy_new_image(name: str, req: DeployRequest, namespace: str = "default"):
             name=name,
             body=patch,
         )
-        return {"status": "rollout triggered", "service": name, "image": req.image}
+
+        return {
+            "status": "rollout triggered",
+            "service": name,
+            "image": req.image,
+        }
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
 
 
-# ---------- Rollout status (polling endpoint) ----------
+# ============================================================
+# ROLLOUT STATUS
+# ============================================================
 
 @app.get("/services/{name}/rollout")
-def rollout_status(name: str, namespace: str = "default"):
-    status = get_rollout_status(name, namespace)
+def rollout_status_endpoint(
+    name: str,
+    namespace: Optional[str] = None,
+    user=Depends(require_permission("view")),
+):
+    namespace = resolve_namespace(
+        user,
+        namespace,
+    )
+
+    status = get_rollout_status(
+        name,
+        namespace,
+    )
+
     if not status:
-        raise HTTPException(status_code=404, detail=f"Rollout '{name}' not found")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Rollout '{name}' not found",
+        )
+
     return status
 
 
-# ---------- Rollback ----------
+# ============================================================
+# ROLLBACK
+# ============================================================
 
 @app.post("/services/{name}/rollback")
-def rollback(name: str, namespace: str = "default"):
-    result = rollback_rollout(name, namespace)
-    return {"status": "rollback initiated", "service": name, "detail": result}
+def rollback_endpoint(
+    name: str,
+    namespace: Optional[str] = None,
+    user=Depends(require_permission("rollback")),
+):
+    namespace = resolve_namespace(
+        user,
+        namespace,
+    )
 
+    result = rollback_rollout(
+        name,
+        namespace,
+    )
+
+    return {
+        "status": "rollback initiated",
+        "service": name,
+        "detail": result,
+    }
+
+
+# ============================================================
+# METRICS
+# ============================================================
 
 @app.get("/services/{name}/metrics")
-def service_metrics(name: str, namespace: str = "team-payments"):
+def service_metrics(
+    name: str,
+    namespace: Optional[str] = None,
+    user=Depends(require_permission("view")),
+):
+    namespace = resolve_namespace(
+        user,
+        namespace,
+    )
+
     from k8s_client import get_service_metrics
-    return get_service_metrics(name, namespace)
+
+    return get_service_metrics(
+        name,
+        namespace,
+    )
+
+
+# ============================================================
+# MONITORING
+# ============================================================
 
 @app.get("/services/{name}/monitor")
-def service_monitor(name: str, namespace: str = "team-payments"):
-    from k8s_client import get_harvey_links, get_rollout_status
-    links = get_harvey_links(name, namespace)
-    status = get_rollout_status(name, namespace)
+def service_monitor(
+    name: str,
+    namespace: Optional[str] = None,
+    user=Depends(require_permission("monitor")),
+):
+    namespace = resolve_namespace(
+        user,
+        namespace,
+    )
+
+    from k8s_client import (
+        get_harvey_links,
+        get_rollout_status,
+    )
+
+    links = get_harvey_links(
+        name,
+        namespace,
+    )
+
+    status = get_rollout_status(
+        name,
+        namespace,
+    )
+
     return {
         "service": name,
         "namespace": namespace,
-        "rollout_phase": status["phase"] if status else "Unknown",
+        "rollout_phase": (
+            status["phase"]
+            if status
+            else "Unknown"
+        ),
         "monitoring": links,
     }
