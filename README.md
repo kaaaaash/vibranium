@@ -1,6 +1,6 @@
 # ⚫ VIBRANIUM
 
-> *"Just because something works doesn't mean it cannot be improved."* — Shuri  
+> *"Just because something works doesn't mean it cannot be improved."* — Aaroh seth(kaash) 
 > This isn't a course project. This is a **control plane that fights back.**
 
 > **DEPLOY. OBSERVE. RECOVER.**
