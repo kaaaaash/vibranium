@@ -1,25 +1,93 @@
+<div align="center">
+
 # ⚫ VIBRANIUM
 
-> *"Just because something works doesn't mean it cannot be improved."* — Aaroh seth(kaash) 
-> This isn't a course project. This is a **control plane that fights back.**
+### Internal Developer Platform for Kubernetes
 
-> **DEPLOY. OBSERVE. RECOVER.**
+> *"Just because something works doesn't mean it cannot be improved."*
+>
+> — Aaroh Seth (Kaash)
+
+### DEPLOY · OBSERVE · RECOVER
+
+![AWS](https://img.shields.io/badge/AWS-EKS-orange?style=for-the-badge&logo=amazonaws)
+![Argo](https://img.shields.io/badge/Argo-Rollouts-red?style=for-the-badge)
+![FastAPI](https://img.shields.io/badge/FastAPI-Control_Plane-green?style=for-the-badge&logo=fastapi)
+![React](https://img.shields.io/badge/React-Frontend-blue?style=for-the-badge&logo=react)
+
+</div>
 
 ---
 
 ## THE DECREE
 
-An **Internal Developer Platform** for Kubernetes — the kind a platform team hands to product engineers so they can ship without touching `kubectl`. Built solo, from the cluster up.
+This isn't a course project.
 
-A developer clicks **Deploy**. Vibranium runs a progressive canary, watches it, and if the rollout goes rogue — **one button drags it back to safety.** Every action is authenticated, authorized server-side, and written to an immutable audit trail.
+This isn't another Kubernetes dashboard.
 
-When a bad image hits the cluster, traffic never reaches it.  
-When someone tries an action above their role, the platform says no — and *logs that they tried.*  
-That's not a dashboard. That's a control plane.
+This is a **control plane that fights back.**
+
+An **Internal Developer Platform** for Kubernetes — the kind a platform team hands to product engineers so they can ship without touching `kubectl`.
+
+Built solo.
+
+From the cluster up.
+
+A developer clicks **Deploy**.
+
+Vibranium launches a progressive canary.
+
+If the rollout goes rogue, **one button drags it back to safety.**
+
+Every action is authenticated.
+
+Every permission is enforced server-side.
+
+Every deployment, rollback and denial is written to an immutable audit trail.
+
+When a bad image hits the cluster, traffic never reaches it.
+
+When someone tries an action above their role, the platform says no — and *logs that they tried.*
+
+That's not a dashboard.
+
+That's a control plane.
+
+> **Region:** ap-south-1
+>
+> **Cluster:** vibranium-cluster
+>
+> **Sprint:** 7 Days
+>
+> **Built By:** One Engineer
 
 ---
 
-## THE ARSENAL
+## WHAT VIBRANIUM DOES
+
+✅ Google SSO Authentication
+
+✅ JWT Session Management
+
+✅ Kubernetes Service Catalog
+
+✅ Progressive Canary Deployments
+
+✅ One-Click Rollbacks
+
+✅ Amazon EKS Integration
+
+✅ Argo Rollouts Traffic Shifting
+
+✅ Server-Side RBAC Enforcement
+
+✅ Immutable Audit Trail
+
+✅ Infrastructure as Code (Terraform)
+
+---
+
+## THE ARSENAL ⚔️
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=plastic&logo=react&logoColor=%2361DAFB)
 ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=plastic&logo=vite&logoColor=white)
@@ -39,7 +107,7 @@ That's not a dashboard. That's a control plane.
 
 ## PATH OF THE REQUEST
 
-```
+```text
 Developer opens the platform
       ↓
 React + Vite UI  →  "Continue with Google"
@@ -65,15 +133,24 @@ Every deploy, rollback & denial  →  immutable audit trail (SQLite)
 
 ## THE LOGIN GATE
 
-Authenticate with your company account to enter the control plane. SSO via Google, RBAC enforced server-side — no token, no entry.
+Authenticate with your company account to enter the control plane.
+
+SSO via Google.
+
+RBAC enforced server-side.
+
+No token. No entry.
 
 ![Login](screenshots/01-login.png)
+
 *The gate. Domain-restricted Google SSO — a JWT is minted only after the backend approves you.*
 
 ![Dashboard](screenshots/02-homescreen.png)
+
 *Inside the control plane.*
 
 ![Dashboard detail](screenshots/03-dashboard.png)
+
 *Fleet at a glance — services, health, recent activity.*
 
 ---
@@ -83,195 +160,106 @@ Authenticate with your company account to enter the control plane. SSO via Googl
 Every service registered to the platform, one click from a deploy.
 
 ![Catalog](screenshots/04-catalog.png)
+
 *The catalog. `checkout-demo` ready for orders.*
 
 ![Deploy](screenshots/05-deploy.png)
-*The deploy wizard — pick an image, fire a progressive rollout. No YAML, no `kubectl`.*
+
+*The deploy wizard — pick an image, fire a progressive rollout. No YAML. No `kubectl`.*
 
 ---
 
 ## PROGRESSIVE DELIVERY — THE CANARY
 
-A new version doesn't get the throne. It earns it — 20% of traffic at a time.
+A new version doesn't get the throne.
+
+It earns it.
+
+20% of traffic at a time.
 
 ![Canary](screenshots/06-canary.png)
+
 *Canary mid-advance. Argo Rollouts shifting traffic step by step.*
 
 ![Healthy](screenshots/07-deployed.png)
+
 *Promoted. Healthy. 100% stable.*
 
 ---
 
 ## TRIAL BY COMBAT
 
-You don't trust a platform because it deploys. You trust it because of what happens **when you break it.**
+You don't trust a platform because it deploys.
+
+You trust it because of what happens when you break it.
 
 ![Bad deploy](screenshots/08-failed-deploy.png)
+
 *A poisoned image (`:9.9.9`) gets shipped on purpose.*
 
 ![Degraded](screenshots/09-degraded.png)
-*The rollout goes **Degraded** — and traffic stays pinned at 0%. Users never see the broken version.*
+
+*The rollout goes Degraded — traffic stays pinned at 0%. Users never see the broken version.*
 
 ![Degraded terminal](screenshots/10-degraded-terminal.png)
+
 *Ground truth from the cluster — `ImagePullBackOff`, exactly as the UI reported.*
 
 ![Rollback](screenshots/11-rollback.png)
+
 *One button. The kill order.*
 
 ![Recovered](screenshots/12-recovered.png)
-*Back to Healthy. Crisis over. Zero `kubectl`. Zero downtime.*
+
+*Back to Healthy. Crisis over. Zero kubectl. Zero downtime.*
 
 ---
 
 ## NO TOKEN, NO TRESPASS — RBAC & AUDIT
 
-Permissions are checked **server-side**, every single time. Four roles, five permissions, one source of truth.
+Permissions are checked server-side.
 
-| Role | view | deploy | monitor | rollback | manage_users |
-| --- | :---: | :---: | :---: | :---: | :---: |
-| **viewer** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **developer** | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **sre** | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **platform-admin** | ✅ | ✅ | ✅ | ✅ | ✅ |
+Every single time.
+
+Four roles.
+
+Five permissions.
+
+One source of truth.
+
+| Role | View | Deploy | Monitor | Rollback | Manage Users |
+|--------|--------|--------|--------|--------|--------|
+| Viewer | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Developer | ✅ | ✅ | ✅ | ❌ | ❌ |
+| SRE | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Platform Admin | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ![Audit trail](screenshots/13-audit-trail.png)
-*The receipts. Every deploy, rollback — and every **denied** attempt — is written down. You can't do it and pretend you didn't.*
+
+*The receipts. Every deploy, rollback and denied attempt is written down forever.*
 
 ![Profile](screenshots/14-profile.png)
+
 *Identity & assigned role.*
 
 ![My activity](screenshots/20-my-activity-feed.png)
+
 *Your personal trail through the control plane.*
 
 ---
 
-## PROOF IT'S REAL
+## PROOF IT'S REAL 🔥
 
-Not a mockup. Real EKS, real rollouts, real infra.
+Not a mockup.
 
-| | |
-| --- | --- |
-| ![Argo](screenshots/15-argo-rollouts.png) | ![Terraform](screenshots/16-terraform-nodes.png) |
-| ![Backend live](screenshots/17-backend-live.png) | ![Backend running](screenshots/18-backend-running.png) |
-| ![Frontend running](screenshots/19-frontend-running.png) | |
+Not local Docker screenshots.
 
----
+Not Figma.
 
-## RAISE THE PLATFORM YOURSELF
+Real EKS.
 
-```bash
-# Clone the vault
-git clone https://github.com/kaaaaash/vibranium.git
-cd vibranium
+Real rollouts.
 
-# 1) Forge the cluster (EKS, ~15-20 min)
-cd infra/terraform
-terraform init
-terraform apply                      # type "yes"
-aws eks update-kubeconfig --name vibranium-cluster --region ap-south-1
-kubectl get nodes                    # nodes should be Ready
+Real infrastructure.
 
-# Install Argo Rollouts
-kubectl create namespace argo-rollouts
-kubectl apply -n argo-rollouts -f \
-  https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
-
-# 2) Wake the control plane (FastAPI)
-cd ../../backend
-source .venv/bin/activate
-pip install -r requirements.txt
-export VIB_JWT_SECRET="$(openssl rand -hex 32)"
-export GOOGLE_CLIENT_ID="<your-gcp-oauth-client-id>.apps.googleusercontent.com"
-export VIB_DB_PATH="./vib.db"
-export ALLOWED_DOMAINS="gmail.com"
-uvicorn main:app --reload --host 0.0.0.0 --port 8001
-# health → {"status":"vibranium is live","version":"0.5.0"}
-
-# 3) Light the interface (React + Vite)
-cd ../frontend
-npm install
-cat > .env <<EOF
-VITE_API=http://localhost:8001
-VITE_GOOGLE_CLIENT_ID=<your-gcp-oauth-client-id>.apps.googleusercontent.com
-EOF
-npm run dev                          # → http://localhost:5173
-```
-
-> ⚠️ Add `http://localhost:5173` to your Google OAuth client's **Authorized JavaScript origins**, and make sure your login email's domain is in `ALLOWED_DOMAINS`.
-
----
-
-## THE BLUEPRINT
-
-```
-vibranium/
-├── backend/                 ← FastAPI control plane (v0.5.0)
-│   ├── main.py              ← API surface
-│   ├── auth.py              ← Google SSO + JWT (HS256, 8h)
-│   ├── k8s_client.py        ← deploy / rollback against EKS
-│   ├── db.py                ← SQLite audit log
-│   ├── rbac.yaml            ← roles × permissions matrix
-│   └── helm/vibranium-chart ← in-cluster deploy
-├── frontend/                ← React + Vite UI
-│   └── src/                 ← pages, components, AuthContext
-├── infra/terraform/         ← EKS, VPC, IAM (ap-south-1)
-└── docs/                    ← 7-day handover logs
-```
-
----
-
-## OPERATION TIMELINE
-
-| Day | Objective | Status |
-| --- | --- | --- |
-| 1 | Terraform → EKS cluster online | ✅ |
-| 2 | FastAPI control plane + ECR push | ✅ |
-| 3 | Google SSO + JWT auth | ✅ |
-| 4 | Argo Rollouts canary integration | ✅ |
-| 5 | React UI — catalog, deploy, rollout views | ✅ |
-| 6 | RBAC + immutable audit trail | ✅ |
-| 7 | Chaos testing + documentation | ✅ |
-
-**Built solo · 7 days · 1 control plane that doesn't flinch.**
-
----
-
-## OPERATOR NOTES
-
-This was built alone. No team, no senior dev reviewing PRs — just handover docs, broken rollouts, and a lot of `terraform destroy`.
-
-An IDP isn't hard because the code is complex. It's hard because it has to be *trustworthy* — a junior dev has to be able to click "Deploy" at 2am and know that if it goes wrong, the platform catches it, not them. That's the whole point: **make the safe thing the easy thing.**
-
-Six months ago "canary deployment" was a phrase on a slide. Now I've got one shifting real traffic on real EKS, with a rollback button that actually works when you break it.
-
----
-
-## WAKANDA GOES DARK
-
-```bash
-cd infra/terraform
-terraform destroy        # zero the burn rate
-```
-
-> 🗝️ Grab your audit-trail screenshots *before* this — the log lives in SQLite and goes with the cluster.
-
----
-
-```
-╔═══════════════════════════════════════════════════════════════╗
-║                                                               ║
-║   VIBRANIUM: ONLINE                                           ║
-║   "It is the strongest metal on Earth." — so is good infra.   ║
-║                                                               ║
-║   Deploy. Observe. Recover.                                   ║
-║   Operator: kaash                                             ║
-║   Status: WAKANDA FOREVER 🐾                                  ║
-║                                                               ║
-╚═══════════════════════════════════════════════════════════════╝
-```
-
-[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=plastic&logo=github&logoColor=white)](https://github.com/kaaaaash)
-[![LinkedIn](https://img.shields.io/badge/linkedin-%230077B5.svg?style=plastic&logo=linkedin&logoColor=white)](https://linkedin.com/in/aarohseth)
-[![X](https://img.shields.io/badge/X-black.svg?style=plastic&logo=X&logoColor=white)](https://x.com/AarohSeth)
-
-*The vault is sealed. The metal is online.*
+Real failure recovery.
