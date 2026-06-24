@@ -80,7 +80,7 @@ const S = {
 
 export default function DashboardSidebar() {
 	const { pathname } = useLocation()
-	const { user, logout } = useAuth()
+	const { user, logout, can } = useAuth()
 	const [isMobile, setIsMobile] = useState(false)
 	const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -103,6 +103,10 @@ export default function DashboardSidebar() {
 	const role = user?.role || "viewer"
 	const initial = (name[0] || "U").toUpperCase()
 	const avatarUrl = user?.picture || user?.avatar || user?.image || ""
+
+	const navItems = can("manage_users")
+		? [...NAV, { to: "/audit", label: "Audit Trail", icon: "\u25C9" }]
+		: NAV
 
 	const closeDrawer = () => setDrawerOpen(false)
 
@@ -133,7 +137,7 @@ export default function DashboardSidebar() {
 			</Link>
 			<div style={S.menuLabel}>MENU</div>
 			<nav style={S.nav}>
-				{NAV.map((item) => {
+				{navItems.map((item) => {
 					const active = pathname === item.to
 					return (
 						<Link

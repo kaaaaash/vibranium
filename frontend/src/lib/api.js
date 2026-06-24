@@ -1,3 +1,5 @@
+import { DEMO, handleMock } from "./demo"
+
 const API = import.meta.env.VITE_API || "http://localhost:8001"
 const TOKEN_KEY = "vib_token"
 
@@ -9,6 +11,18 @@ export function authHeaders() {
 
 // core wrapper: adds auth + JSON headers, kicks you to /login on 401
 export async function apiFetch(path, options = {}) {
+  // --- DEMO MODE: serve from the in-memory mock, never hit the network ---
+  if (DEMO) {
+    const method = (options.method || "GET").toUpperCase()
+    let body
+    try {
+      body = options.body ? JSON.parse(options.body) : undefined
+    } catch (e) {}
+    const data = await handleMock(method, path, body)
+    return { ok: true, status: 200, json: async () => data }
+  }
+
+  // --- normal path (real backend) ---
   const url = path.startsWith("http") ? path : `${API}${path}`
   const headers = {
     "Content-Type": "application/json",

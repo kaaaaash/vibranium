@@ -13,6 +13,7 @@ import RolloutDetails from "./pages/RolloutDetails"
 import Dashboard from "./pages/Dashboard"
 import NotFound from "./pages/NotFound"
 import Profile from "./pages/Profile"
+import Audit from "./pages/Audit"
 
 const S = {
 	shell: { minHeight: "100vh", backgroundColor: "var(--bg)" },
@@ -67,6 +68,7 @@ export default function App() {
 					<Route path="/services/:name" element={<RolloutDetails />} />
 					<Route path="/dashboard" element={<Dashboard />} />
 					<Route path="/profile" element={<Profile />} />
+					<Route path="/audit" element={<Audit />} />
 					<Route path="*" element={<NotFound />} />
 				</Routes>
 			</PageTransition>

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { DEMO, DEMO_USER, DEMO_TOKEN } from "../lib/demo"
 
 const API = import.meta.env.VITE_API || "http://localhost:8001"
 const TOKEN_KEY = "vib_token"
@@ -6,13 +7,19 @@ const TOKEN_KEY = "vib_token"
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || "")
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [token, setToken] = useState(() => DEMO ? DEMO_TOKEN : (localStorage.getItem(TOKEN_KEY) || ""))
+  const [user, setUser] = useState(DEMO ? DEMO_USER : null)
+  const [loading, setLoading] = useState(!DEMO)
   const [error, setError] = useState("")
 
   // On load (or whenever the token changes), confirm it with the backend.
   useEffect(() => {
+    if (DEMO) {
+      setUser(DEMO_USER)
+      setLoading(false)
+      return
+    }
+
     let cancelled = false
 
     async function hydrate() {
@@ -47,6 +54,13 @@ export function AuthProvider({ children }) {
 
   // Exchange a Google ID token for a VIB token (backend is the source of truth).
   const login = useCallback(async (googleCredential) => {
+    if (DEMO) {
+      localStorage.setItem(TOKEN_KEY, DEMO_TOKEN)
+      setUser(DEMO_USER)
+      setToken(DEMO_TOKEN)
+      return DEMO_USER
+    }
+
     setError("")
     const res = await fetch(API + "/auth/login", {
       method: "POST",
