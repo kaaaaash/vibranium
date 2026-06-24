@@ -30,17 +30,19 @@ export default function Loader({ onComplete }) {
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'flex-start',
-      padding: '0 0 80px 48px',
+      padding: '0 16px 80px clamp(20px, 5vw, 48px)',
       zIndex: 9999,
+      overflow: 'hidden',
       transform: slideUp ? 'translateY(-100%)' : 'translateY(0)',
       transition: 'transform 0.7s cubic-bezier(0.76, 0, 0.24, 1)',
     }}>
       <span style={{
         color: 'var(--accent)',
-        fontSize: 'clamp(64px, 12vw, 160px)',
+        fontSize: 'clamp(38px, 11vw, 160px)',
         letterSpacing: '-0.02em',
         fontFamily: 'var(--font-hero)', fontWeight: '400',
         lineHeight: 1,
+        whiteSpace: 'nowrap',
       }}>
         {displayed}
         {displayed.length < FINAL.length && (
