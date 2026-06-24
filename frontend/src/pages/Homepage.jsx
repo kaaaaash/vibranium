@@ -23,7 +23,7 @@ const S = {
     display: "flex",
     flexDirection: "column",
     justifyContent: "flex-end",
-    padding: "0 0 64px 48px",
+    padding: "0 16px 64px clamp(20px, 5vw, 48px)",
   },
   heroContent: { position: "relative", zIndex: 1 },
   tag: {
@@ -35,7 +35,7 @@ const S = {
   },
   h1: {
     color: "var(--accent)",
-    fontSize: "clamp(64px, 12vw, 160px)",
+    fontSize: "clamp(38px, 11vw, 160px)",
     letterSpacing: "-0.02em",
     fontFamily: "var(--font-hero)",
     fontWeight: "400",
