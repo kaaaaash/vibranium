@@ -10,6 +10,14 @@
 
 ### DEPLOY · OBSERVE · RECOVER
 
+<p align="center">
+  <a href="https://vibranium-one.vercel.app">
+    <img src="https://img.shields.io/badge/▶_Live_Demo-vibranium--one.vercel.app-8B0000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+  </a>
+</p>
+
+> 🌐 **[Try the live demo →](https://vibranium-one.vercel.app)** — runs in demo mode (no login required); deploys, canary rollouts, and rollbacks are fully interactive against a mocked control plane.
+
 ![AWS](https://img.shields.io/badge/AWS-EKS-orange?style=for-the-badge&logo=amazonaws)
 ![Argo](https://img.shields.io/badge/Argo-Rollouts-red?style=for-the-badge)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Control_Plane-green?style=for-the-badge&logo=fastapi)
